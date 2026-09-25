@@ -1,0 +1,4 @@
+# Versions used to generate the committed answer-file fingerprint.
+# Other versions or machines may change the data slightly (and so the fingerprint).
+numpy==2.2.6
+pandas==2.3.3
