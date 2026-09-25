@@ -1,0 +1,9 @@
+Fingerprint of the hidden answer file, committed before any analysis starts.
+
+File:     data/answers/answers.json  (not in git until the analysis is finished)
+SHA-256:  70a64fb226099cab0fb6858b56c128a617229dc7b331201610295907df9d67a4
+Made by:  python/generate_data.py, seed 20250925, rulebook v4, numpy 2.2.6, pandas 2.3.3
+Date:     25 Sep 2026
+
+Check it at any time:  shasum -a 256 data/answers/answers.json
+The same code and package versions rebuild a byte-identical file.

@@ -1,4 +1,9 @@
 .DS_Store
 AGENTS.md
 Claude outputs/
-Claude outputs/
+
+# Hidden answer file: only its SHA-256 fingerprint is committed until the analysis is done
+data/answers/
+# Generated CSVs: rebuilt identically by python/generate_data.py
+data/raw/*.csv
+data/xlsx/*.xlsx
