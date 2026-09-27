@@ -1,0 +1,26 @@
+[
+  {
+    "name": "fraud_report_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Fraud report key"
+  },
+  {
+    "name": "attempt_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The approved attempt reported as fraud"
+  },
+  {
+    "name": "reported_date",
+    "type": "DATE",
+    "mode": "NULLABLE",
+    "description": "Day the report arrived"
+  },
+  {
+    "name": "amount_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Payment amount"
+  }
+]

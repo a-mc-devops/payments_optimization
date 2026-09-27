@@ -1,0 +1,44 @@
+[
+  {
+    "name": "bank_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Bank charging the fee"
+  },
+  {
+    "name": "card_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "debit or credit"
+  },
+  {
+    "name": "region",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Card country vs SHOP country: domestic, other_eu or non_eu"
+  },
+  {
+    "name": "fee_pct",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Bank fee, % of approved amount (0.60 = 0.60%)"
+  },
+  {
+    "name": "fixed_fee_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Bank fixed fee per approved payment, EUR"
+  },
+  {
+    "name": "valid_from",
+    "type": "DATE",
+    "mode": "NULLABLE",
+    "description": "First day the rule applies"
+  },
+  {
+    "name": "valid_to",
+    "type": "DATE",
+    "mode": "NULLABLE",
+    "description": "Last day the rule applies; empty = still valid"
+  }
+]

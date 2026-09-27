@@ -1,0 +1,20 @@
+[
+  {
+    "name": "bank_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Bank key: BNK_NL, BNK_DE, BNK_FR"
+  },
+  {
+    "name": "bank_name",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Bank name"
+  },
+  {
+    "name": "country",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Bank's country"
+  }
+]

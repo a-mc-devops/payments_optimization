@@ -1,0 +1,80 @@
+[
+  {
+    "name": "attempt_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "One try to pay; exact duplicate rows exist on purpose"
+  },
+  {
+    "name": "payment_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The checkout the try belongs to; retries share it"
+  },
+  {
+    "name": "attempt_number",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "1 = first try, 2-3 = retries"
+  },
+  {
+    "name": "initiated_by",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "customer or platform"
+  },
+  {
+    "name": "shop_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Shop"
+  },
+  {
+    "name": "attempted_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "When the try happened (UTC)"
+  },
+  {
+    "name": "amount_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Amount in EUR"
+  },
+  {
+    "name": "card_country",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "NL, DE, FR, ES, UK or US"
+  },
+  {
+    "name": "card_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "debit or credit"
+  },
+  {
+    "name": "bank_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Bank the try went to (for gave_up: the bank it would have gone to)"
+  },
+  {
+    "name": "three_ds_used",
+    "type": "BOOLEAN",
+    "mode": "NULLABLE",
+    "description": "3D Secure check used"
+  },
+  {
+    "name": "outcome",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "approved, declined or gave_up"
+  },
+  {
+    "name": "decline_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "try_again or permanent; empty unless declined"
+  }
+]

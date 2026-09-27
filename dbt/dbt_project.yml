@@ -1,0 +1,36 @@
+# dbt project settings. dbt reads this file first.
+# Run every dbt command from this folder (cd dbt), e.g.:  uv run dbt build
+
+name: payments_optimization
+version: "1.0.0"
+profile: payments_optimization   # login settings: ~/.dbt/profiles.yml (never in git)
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+analysis-paths: ["analyses"]
+snapshot-paths: ["snapshots"]
+
+clean-targets: ["target", "dbt_packages"]   # folders removed by: dbt clean
+
+models:
+  payments_optimization:
+    # Copy model and column descriptions into BigQuery, so they show in the console
+    +persist_docs:
+      relation: true
+      columns: true
+
+    # One BigQuery dataset per layer (see macros/generate_schema_name.sql):
+    #   dev target  -> dbt_amcdevops_staging, dbt_amcdevops_intermediate, dbt_amcdevops_marts
+    #   prod target -> staging, intermediate, marts
+    # Sandbox: no incremental models or snapshots (INSERT/UPDATE/MERGE are blocked).
+    staging:          # one light clean-up per raw table
+      +schema: staging
+      +materialized: view
+    intermediate:     # building blocks for the marts (Stage 3)
+      +schema: intermediate
+      +materialized: view
+    marts:            # final tables Power BI reads (Stage 3-4)
+      +schema: marts
+      +materialized: table

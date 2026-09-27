@@ -1,6 +1,6 @@
 # Rulebook: how the simulated world behaves
 
-Draft v4, 25 Sep 2026, waiting for Sam's final approval. The generator in `python/` follows these rules
+v4, approved by Sam on 25 Sep 2026 and used for the committed data. The generator in `python/` follows these rules
 exactly. To change the data, change this file first, then the code.
 
 **Hidden numbers.** A value in square brackets, like [20–40%], is a range. The generator picks the

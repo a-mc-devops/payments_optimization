@@ -7,3 +7,12 @@ data/answers/
 # Generated CSVs: rebuilt identically by python/generate_data.py
 data/raw/*.csv
 data/xlsx/*.xlsx
+
+# Python environment (rebuilt with: uv sync)
+.venv/
+__pycache__/
+
+# dbt build output and downloaded packages
+target/
+dbt_packages/
+logs/
