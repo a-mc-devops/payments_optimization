@@ -1,9 +1,8 @@
 # dbt project settings. dbt reads this file first.
-# Run every dbt command from this folder (cd dbt), e.g.:  uv run dbt build
 
 name: payments_optimization
 version: "1.0.0"
-profile: payments_optimization   # login settings: ~/.dbt/profiles.yml (never in git)
+profile: payments_optimization   # login name; dbt Studio handles the login itself
 
 model-paths: ["models"]
 macro-paths: ["macros"]
