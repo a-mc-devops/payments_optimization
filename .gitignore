@@ -1,6 +1,6 @@
 .DS_Store
 AGENTS.md
-Claude outputs/
+research/
 
 # Hidden answer file: only its SHA-256 fingerprint is committed until the analysis is done
 data/answers/
@@ -8,11 +8,3 @@ data/answers/
 data/raw/*.csv
 data/xlsx/*.xlsx
 
-# Python environment (rebuilt with: uv sync)
-.venv/
-__pycache__/
-
-# dbt build output and downloaded packages
-target/
-dbt_packages/
-logs/
