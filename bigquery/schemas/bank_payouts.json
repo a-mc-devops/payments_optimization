@@ -1,0 +1,56 @@
+[
+  {
+    "name": "payout_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Bank payout key"
+  },
+  {
+    "name": "shop_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Shop"
+  },
+  {
+    "name": "bank_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Bank paying out"
+  },
+  {
+    "name": "payment_date",
+    "type": "DATE",
+    "mode": "NULLABLE",
+    "description": "Day the payments were approved"
+  },
+  {
+    "name": "payout_date",
+    "type": "DATE",
+    "mode": "NULLABLE",
+    "description": "Day the money was paid out"
+  },
+  {
+    "name": "payment_count",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Approved payments in this payout"
+  },
+  {
+    "name": "gross_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Sum of approved amounts"
+  },
+  {
+    "name": "fees_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Fees the bank took"
+  },
+  {
+    "name": "net_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "gross_eur - fees_eur"
+  }
+]

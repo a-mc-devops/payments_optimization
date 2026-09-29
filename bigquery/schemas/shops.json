@@ -1,0 +1,56 @@
+[
+  {
+    "name": "shop_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Shop key, e.g. S01"
+  },
+  {
+    "name": "shop_name",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Readable shop name"
+  },
+  {
+    "name": "country",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Shop's country: NL, DE or FR"
+  },
+  {
+    "name": "business_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "online_retail, travel, digital_subscriptions or food_delivery"
+  },
+  {
+    "name": "fee_pct",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Price the shop pays the platform, % of each approved amount (1.60 = 1.60%)"
+  },
+  {
+    "name": "fixed_fee_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Fixed EUR the shop pays per approved payment"
+  },
+  {
+    "name": "retries_on_date",
+    "type": "DATE",
+    "mode": "NULLABLE",
+    "description": "Day automatic retries were switched on; empty = never"
+  },
+  {
+    "name": "three_ds_policy",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "always, never or above_threshold"
+  },
+  {
+    "name": "three_ds_threshold_eur",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Amount from which 3D Secure is used; only for above_threshold shops"
+  }
+]
