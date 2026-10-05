@@ -32,8 +32,13 @@ results are checked against those answers.
 | bank_payouts | shop x bank x payment day | 11,281 |
 | fraud_reports | payment later reported as fraud | 162 |
 
+How the tables connect (keys, joins, and a diagram): [`docs/data_model.md`](docs/data_model.md).
+
+![How the six tables connect](images/erd.svg)
+
 The data includes realistic mess on purpose: duplicate rows, fraud reports that arrive
-late, and one bank's payouts with wrong fees.
+late, one bank's payouts with wrong fees, and a few missing payouts. What profiling found,
+and the cleaning plan: [`docs/profiling_notes.md`](docs/profiling_notes.md).
 
 Rebuild the data (the fixed seed gives identical files):
 
@@ -45,7 +50,10 @@ python python/check_generated_data.py
 
 ## Repository
 
-- `docs/`: rulebook and the answer-file fingerprint
+- `docs/`: rulebook, answer-file fingerprint, data model, profiling notes
+- `images/`: diagrams (table relationships, money flow of one payment)
+- `dbt/`: dbt project: staging models with tests (`models/staging/`), a custom test (`tests/`),
+  profiling queries (`analyses/`)
 - `python/`: data generator and checks
 - `bigquery/`: table schemas, load guide and load check
 - `data/`: generated files (not in git)
@@ -56,4 +64,11 @@ Python (data generator) → BigQuery → dbt → Power BI
 
 ## Status
 
-Stage 1 of 7 complete: data generated, checked and loaded into BigQuery. Next: dbt models.
+Stage 2 of 7 complete:
+
+1. Data generated, checked and loaded into BigQuery.
+2. Raw data profiled; one staging model per raw table in dbt (renames, and 317 duplicate payment
+   attempts removed), each with tests: keys, empty values, allowed values, links between tables,
+   and rules between columns. `dbt build` passes all 69 tests.
+
+Next: core models (payments, fees, money per shop and month).

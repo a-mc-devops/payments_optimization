@@ -1,0 +1,20 @@
+models:
+  - name: stg_fraud_reports
+    columns:
+      - name: fraud_report_id
+        data_tests:
+          - unique
+          - not_null
+      - name: attempt_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_payment_attempts')
+                field: attempt_id
+      - name: reported_date
+        data_tests:
+          - not_null
+      - name: fraud_amount_eur
+        data_tests:
+          - not_null

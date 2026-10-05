@@ -1,0 +1,69 @@
+models:
+  - name: stg_payment_attempts
+    columns:
+      - name: attempt_id
+        data_tests:
+          - unique
+          - not_null
+      - name: payment_id
+        data_tests:
+          - not_null
+      - name: attempt_number
+        data_tests:
+          - not_null
+      - name: initiated_by
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['customer', 'platform']
+      - name: shop_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_shops')
+                field: shop_id
+      - name: attempted_at
+        data_tests:
+          - not_null          
+      - name: amount_eur
+        data_tests:
+          - not_null
+      - name: card_country
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DE', 'ES', 'FR', 'NL', 'UK', 'US']
+      - name: card_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['debit', 'credit']
+      - name: bank_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_banks')
+                field: bank_id
+      - name: three_ds_used
+        data_tests:
+          - not_null
+      - name: outcome
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['approved', 'declined', 'gave_up']
+      - name: decline_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['try_again', 'permanent']
+    data_tests:
+    - dbt_utils.expression_is_true:
+        arguments:
+          expression: "(outcome = 'declined') = (decline_type IS NOT NULL)"

@@ -1,0 +1,11 @@
+sources:
+  - name: raw
+    database: payments-optimization   # BQ project name
+    schema: raw                       # BQ dataset name
+    tables:
+      - name: bank_payouts
+      - name: banks
+      - name: fee_rules
+      - name: fraud_reports
+      - name: payment_attempts
+      - name: shops

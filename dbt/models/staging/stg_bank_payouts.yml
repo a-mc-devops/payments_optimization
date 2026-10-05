@@ -1,0 +1,49 @@
+models:
+  - name: stg_bank_payouts
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - shop_id
+              - bank_id
+              - payment_date
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "net_eur = gross_eur - bank_fees_eur"
+    columns:
+      - name: payout_id
+        data_tests:
+          - unique
+          - not_null
+      - name: shop_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_shops')
+                field: shop_id
+      - name: bank_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_banks')
+                field: bank_id
+      - name: payment_date
+        data_tests:
+          - not_null
+      - name: payout_date
+        data_tests:
+          - not_null
+      - name: payment_count
+        data_tests:
+          - not_null
+      - name: gross_eur
+        data_tests:
+          - not_null
+      - name: bank_fees_eur
+        data_tests:
+          - not_null
+      - name: net_eur
+        data_tests:
+          - not_null

@@ -1,0 +1,16 @@
+models:
+  - name: stg_banks
+    columns:
+      - name: bank_id
+        data_tests:
+          - unique
+          - not_null
+      - name: bank_name
+        data_tests:
+          - not_null
+      - name: bank_country
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['NL', 'DE', 'FR']

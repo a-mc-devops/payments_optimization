@@ -1,0 +1,38 @@
+models:
+  - name: stg_shops
+    columns:
+      - name: shop_id
+        data_tests:
+          - unique
+          - not_null
+      - name: shop_name
+        data_tests:
+          - not_null
+      - name: shop_country
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['NL', 'DE', 'FR']
+      - name: business_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['online_retail', 'travel', 'digital_subscriptions', 'food_delivery']
+      - name: shop_fee_pct
+        data_tests:
+          - not_null
+      - name: shop_fixed_fee_eur
+        data_tests:
+          - not_null
+      - name: three_ds_policy
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['above_threshold', 'always', 'never']
+    data_tests:
+    - dbt_utils.expression_is_true:
+        arguments:
+          expression: "(three_ds_policy = 'above_threshold') = (three_ds_threshold_eur IS NOT NULL)"      
