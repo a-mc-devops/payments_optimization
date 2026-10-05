@@ -1,6 +1,7 @@
 .DS_Store
 AGENTS.md
 research/
+Claude outputs/
 
 # Hidden answer file: only its SHA-256 fingerprint is committed until the analysis is done
 data/answers/

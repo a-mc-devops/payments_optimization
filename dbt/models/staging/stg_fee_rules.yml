@@ -1,0 +1,39 @@
+models:
+  - name: stg_fee_rules
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - bank_id
+              - card_type
+              - card_region
+              - valid_from
+    columns:
+      - name: bank_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_banks')
+                field: bank_id
+      - name: card_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['credit', 'debit']
+      - name: card_region
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['domestic', 'other_eu', 'non_eu']  
+      - name: bank_fee_pct
+        data_tests:
+          - not_null
+      - name: bank_fixed_fee_eur
+        data_tests:
+          - not_null
+      - name: valid_from
+        data_tests:
+          - not_null
