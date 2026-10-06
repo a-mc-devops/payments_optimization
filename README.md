@@ -53,7 +53,8 @@ python python/check_generated_data.py
 - `docs/`: rulebook, answer-file fingerprint, data model, profiling notes
 - `images/`: diagrams (table relationships, money flow of one payment)
 - `dbt/`: dbt project: staging models with tests (`models/staging/`), a custom test (`tests/`),
-  profiling queries (`analyses/`)
+  a profiling macro that profiles any table (`macros/profile_table.sql`), profiling queries
+  (`analyses/`)
 - `python/`: data generator and checks
 - `bigquery/`: table schemas, load guide and load check
 - `data/`: generated files (not in git)

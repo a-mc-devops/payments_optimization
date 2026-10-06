@@ -15,6 +15,21 @@ can't do. All of them held on the raw data when checked on 2 Oct 2026. Built in 
 **Status (5 Oct 2026):** every test listed below is built in `dbt/models/staging/stg_<table>.yml`;
 `dbt build` passes 75/75 (6 models, 69 tests).
 
+## Profiling macro (7 Oct 2026)
+
+The hand-written queries above were replaced for repeat use by one Jinja macro,
+`dbt/macros/profile_table.sql`. Given any table (a `ref()` or a `source()`), it looks up the
+columns itself (`adapter.get_columns_in_relation`) and returns one row per column: table_name,
+column_name, data_type, row_count, empty_values, distinct_values, and min/max (number, date and
+timestamp columns only; cast to text so all rows stack with `UNION ALL`).
+
+- `dbt/analyses/profile_all.sql` calls it for all six staging models: 45 rows, one per column.
+- Results match the notes below, with one expected difference: empty `decline_type` is 91,531 in
+  `stg_payment_attempts` vs 91,813 in the raw table, because 282 of the 317 removed duplicate
+  rows were non-declined tries (checked against the raw table).
+- The hand-written `profile_<table>.sql` files stay as the record of the first profiling of the
+  raw tables. The macro also works on raw tables: `{{ profile_table(source('raw', 'shops')) }}`.
+
 ## shops
 
 **Rows:** 24
