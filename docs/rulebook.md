@@ -95,6 +95,8 @@ Which shops lose money follows from these prices and their costs; the true list 
 
 ## 7. 3D Secure (extra security check)
 
+- The platform sets each shop's 3D Secure setting, because it carries the fraud risk on payments
+  without the check (§8).
 - Each shop has one setting all year: 8 shops **always**, 8 **never**, 8 only at or above their
   type's threshold (2 of each per business type).
 - On a checked payment: some customers give up (table), recorded as `gave_up` with no bank decision
@@ -105,8 +107,10 @@ Which shops lose money follows from these prices and their costs; the true list 
 
 - Only approved payments can be fraud. Chance = base (table) × UK ×2, US ×3 × amount €100+ ×1.5,
   then the 3D Secure cut.
-- The platform guarantees its shops against fraud on payments without 3D Secure. So unchecked fraud
-  costs the platform the full amount + a €20 dispute fee.
+- Fraud guarantee: the platform includes fraud protection in every shop's price. When a payment
+  without 3D Secure is reported as fraud, the amount goes back to the card owner and the collecting
+  bank charges a €20 dispute fee. The platform pays both; the shop pays nothing. So unchecked fraud
+  costs the platform the full amount + €20. With 3D Secure, the card owner's bank pays (§7).
 - Reports arrive 2–26 weeks after the payment (half within about 6 weeks). Reports that would arrive
   after 31 Jan 2026 are missing from the data, so late-2025 fraud looks too low.
 
@@ -115,6 +119,10 @@ Which shops lose money follows from these prices and their costs; the true list 
 - One row per shop × bank × day with approved payments: payment count, gross amount, fees taken,
   net amount. The day is the day of approval (a retry approved after midnight counts on the new day). Paid the next working day (Fri–Sun payments are paid on Monday). Fraud refunds are
   settled elsewhere and are not in payouts.
+- Money flow: the bank pays each payout to the platform, after keeping its fee (`fees_eur`). The platform
+  keeps the shop's price minus that fee and pays the rest to the shop; that last transfer is not in the
+  data. Example: €50 payment, shop price €1.05, bank fee €0.40 → the platform gets €49.60, keeps €0.65
+  and pays the shop €48.95.
 - Errors: one bank (hidden) takes the wrong fee on [2–5%] of its rows. [3–6] payouts never arrive.
 
 ## 10. Built-in mess
@@ -157,3 +165,8 @@ fingerprint is committed before analysis starts. It holds:
   in platform profit and in shop sales.
 - v4: customers retry by themselves when automatic retries are off; 60% of declines are "try again";
   retail 3D Secure threshold €150; clarified fraud guarantee, fee rounding and `bank_id` on give-ups.
+- 8 Oct 2026, wording only (generator and data unchanged): §9 states the money flow (the bank pays the
+  platform; the platform keeps shop price − bank fee and pays the rest to the shop). §8 describes the
+  fraud guarantee as protection included in the shop price (amount back to the card owner, €20 dispute
+  fee to the collecting bank, both paid by the platform). §7 says the platform sets each shop's
+  3D Secure setting.

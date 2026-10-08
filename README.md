@@ -7,12 +7,20 @@ places:
 
 - **Declined cards**: the customer wanted to pay, the sale was lost.
 - **Bank fees**: some payments are routed to a more expensive bank than necessary.
-- **Fraud**: stolen-card payments that are later reported and refunded.
+- **Fraud**: the platform includes fraud protection in its price, so it pays for stolen-card
+  payments made without the 3D Secure check (the amount back to the card owner plus a €20 dispute
+  fee).
 - **Underpriced shops**: shops paying the platform less than their payments cost it.
 
 The project measures each leak per shop and month, estimates what each fix is worth per
 year (bank choice, retrying declined payments, repricing shops, the 3D Secure security
 check), and ranks the actions for a Head of Payments.
+
+The scenario: fraud protection is the platform's selling point. Instead of passing fraud costs to
+its shops, or forcing the 3D Secure check on every payment (which makes some customers give up),
+the platform carries the cost of fraud on payments without the check. The project measures what
+that guarantee costs, which business types make it expensive, and how different 3D Secure settings
+would shift money between fraud losses and lost sales.
 
 ## About the data
 

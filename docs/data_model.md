@@ -11,7 +11,7 @@ Diagram: `images/erd.svg`.
 | banks | one bank | 3 | `bank_id` | – |
 | fee_rules | one bank's fee for one card type and card region, during one period | 21 | `bank_id` + `card_type` + `region` + `valid_from` | banks |
 | payment_attempts | one try to pay (retries are extra rows) | 106,130 raw, 105,813 after removing duplicates | `attempt_id` (only after removing duplicates) | shops, banks |
-| bank_payouts | one bank's payout to one shop for one day's approved payments | 11,281 | `payout_id` (also unique: `shop_id` + `bank_id` + `payment_date`) | shops, banks |
+| bank_payouts | one bank's payout for one shop's approved payments on one day (paid to the platform, rulebook §9) | 11,281 | `payout_id` (also unique: `shop_id` + `bank_id` + `payment_date`) | shops, banks |
 | fraud_reports | one approved payment later reported as fraud | 162 | `fraud_report_id` | payment_attempts |
 
 `payment_id` is not a key. It groups a first try with its retries, so it repeats on purpose
