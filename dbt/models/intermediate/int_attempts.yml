@@ -1,0 +1,22 @@
+models:
+  - name: int_attempts
+    columns:
+      - name: attempt_id
+        data_tests:
+          - unique
+          - not_null
+      - name: card_region
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['domestic', 'other_eu', 'non_eu']
+      - name: payment_id
+        data_tests:
+          - unique:
+              config:
+                where: "is_approved"
+    data_tests:
+    - dbt_utils.equal_rowcount:
+        arguments:
+          compare_model: ref('stg_payment_attempts')
