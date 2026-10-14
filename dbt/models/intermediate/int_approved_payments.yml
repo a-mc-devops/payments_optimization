@@ -1,0 +1,17 @@
+models:
+  - name: int_approved_payments
+    columns:
+      - name: attempt_id
+        data_tests:
+          - unique
+          - not_null
+      - name: expected_bank_fee_eur
+        data_tests:
+          - not_null
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "expected_bank_fee_eur > 0 AND expected_bank_fee_eur < amount_eur"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(guarantee_cost_eur > 0) = (fraud_report_id IS NOT NULL AND NOT three_ds_used)"

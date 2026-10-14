@@ -1,0 +1,15 @@
+models:
+  - name: fct_money_map
+    data_tests:
+    - dbt_utils.unique_combination_of_columns:
+        arguments:
+          combination_of_columns:
+            - shop_id
+            - payment_month
+    columns:
+      - name: approved_sales_eur
+        data_tests:
+          - not_null
+      - name: platform_margin_eur
+        data_tests:
+          - not_null

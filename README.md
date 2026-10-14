@@ -7,12 +7,20 @@ places:
 
 - **Declined cards**: the customer wanted to pay, the sale was lost.
 - **Bank fees**: some payments are routed to a more expensive bank than necessary.
-- **Fraud**: stolen-card payments that are later reported and refunded.
+- **Fraud**: the platform includes fraud protection in its price, so it pays for stolen-card
+  payments made without the 3D Secure check (the amount back to the card owner plus a €20 dispute
+  fee).
 - **Underpriced shops**: shops paying the platform less than their payments cost it.
 
 The project measures each leak per shop and month, estimates what each fix is worth per
 year (bank choice, retrying declined payments, repricing shops, the 3D Secure security
 check), and ranks the actions for a Head of Payments.
+
+The scenario: fraud protection is the platform's selling point. Instead of passing fraud costs to
+its shops, or forcing the 3D Secure check on every payment (which makes some customers give up),
+the platform carries the cost of fraud on payments without the check. The project measures what
+that guarantee costs, which business types make it expensive, and how different 3D Secure settings
+would shift money between fraud losses and lost sales.
 
 ## About the data
 
@@ -48,13 +56,30 @@ python python/generate_data.py
 python python/check_generated_data.py
 ```
 
+## Core models
+
+Built in dbt on top of the staging models (details: [`docs/data_model.md`](docs/data_model.md#core-models-stage-3)):
+
+| Model | One row = | Rows | What it holds |
+| --- | --- | ---: | --- |
+| `int_attempts` | one try | 105,813 | each try with its shop's details, its day, approved yes/no, and its bank-fee group |
+| `int_payments` | one payment (first try + retries) | 100,141 | what was won and lost: final outcome, number of tries, saved by a retry |
+| `int_approved_payments` | one sale | 88,565 | what was earned and paid: shop price, expected bank fee, fraud guarantee cost, margin |
+| `fct_money_map` | one shop x month | 288 | the money map: sales, price, bank fees, fraud cost, margin, and sales lost to declines and give-ups |
+
+![Core models](images/core_models.png)
+
+Tests prove that no join doubled or dropped a row: every sale matches exactly one bank fee rule,
+the approved try is always a payment's last, and the money map's totals equal those of its inputs
+to the cent.
+
 ## Repository
 
 - `docs/`: rulebook, answer-file fingerprint, data model, profiling notes
-- `images/`: diagrams (table relationships, money flow of one payment)
-- `dbt/`: dbt project: staging models with tests (`models/staging/`), a custom test (`tests/`),
-  a profiling macro that profiles any table (`macros/profile_table.sql`), profiling queries
-  (`analyses/`)
+- `images/`: diagrams (table relationships, core models)
+- `dbt/`: dbt project: staging models (`models/staging/`), core models (`models/intermediate/`,
+  `models/marts/`), each with a YAML file of tests; custom SQL tests (`tests/`); a profiling macro
+  that profiles any table (`macros/profile_table.sql`); profiling queries (`analyses/`)
 - `python/`: data generator and checks
 - `bigquery/`: table schemas, load guide and load check
 - `data/`: generated files (not in git)
@@ -65,11 +90,14 @@ Python (data generator) → BigQuery → dbt → Power BI
 
 ## Status
 
-Stage 2 of 7 complete:
+Stage 3 of 7 complete:
 
 1. Data generated, checked and loaded into BigQuery.
 2. Raw data profiled; one staging model per raw table in dbt (renames, and 317 duplicate payment
    attempts removed), each with tests: keys, empty values, allowed values, links between tables,
-   and rules between columns. `dbt build` passes all 69 tests.
+   and rules between columns.
+3. Core models: tries, payments, sales with their fees and fraud cost, and a money map per shop and
+   month, with 22 tests. `dbt build` runs 10 models and 91 tests.
 
-Next: core models (payments, fees, money per shop and month).
+Next: Stage 4, a yearly euro value for each fix (bank choice, retries, shop repricing, 3D Secure
+settings), with low/high ranges, ranked.

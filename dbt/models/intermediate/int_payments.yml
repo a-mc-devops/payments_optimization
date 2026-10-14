@@ -1,0 +1,24 @@
+models:
+  - name: int_payments
+    columns:
+      - name: payment_id
+        data_tests:
+          - unique
+          - not_null
+      - name: final_outcome
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['approved', 'gave_up', 'declined']
+      - name: approved_attempt_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('int_approved_payments')
+                field: attempt_id
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(final_outcome = 'approved') = (approved_attempt_id IS NOT NULL)"
+         

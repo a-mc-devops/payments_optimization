@@ -1,7 +1,8 @@
-# Data model: the six raw tables
+# Data model
 
 How the raw tables fit together: what one row means, what identifies it, and how tables connect.
-Diagram: `images/erd.svg`.
+Diagram: `images/erd.svg`. The core models built from them (Stage 3) are described
+[at the end](#core-models-stage-3).
 
 ## The tables
 
@@ -11,7 +12,7 @@ Diagram: `images/erd.svg`.
 | banks | one bank | 3 | `bank_id` | – |
 | fee_rules | one bank's fee for one card type and card region, during one period | 21 | `bank_id` + `card_type` + `region` + `valid_from` | banks |
 | payment_attempts | one try to pay (retries are extra rows) | 106,130 raw, 105,813 after removing duplicates | `attempt_id` (only after removing duplicates) | shops, banks |
-| bank_payouts | one bank's payout to one shop for one day's approved payments | 11,281 | `payout_id` (also unique: `shop_id` + `bank_id` + `payment_date`) | shops, banks |
+| bank_payouts | one bank's payout for one shop's approved payments on one day (paid to the platform, rulebook §9) | 11,281 | `payout_id` (also unique: `shop_id` + `bank_id` + `payment_date`) | shops, banks |
 | fraud_reports | one approved payment later reported as fraud | 162 | `fraud_report_id` | payment_attempts |
 
 `payment_id` is not a key. It groups a first try with its retries, so it repeats on purpose
@@ -90,3 +91,78 @@ Every part of the diagram suggests a check:
 In dbt, relationships tests point to the staging model (`stg_shops`), not to the raw source.
 Rules between columns or tables need more than the four built-in tests; they are listed per table
 under "Tests to add" in `docs/profiling_notes.md`.
+
+## Core models (Stage 3)
+
+Built in dbt from the staging models: three intermediate views and one mart table. Diagram:
+`images/core_models.png`.
+
+![Core models](../images/core_models.png)
+
+| Model | Layer | One row = | Rows | Key | Built from |
+| --- | --- | --- | ---: | --- | --- |
+| `int_attempts` | intermediate (view) | one try | 105,813 | `attempt_id` | `stg_payment_attempts` + `stg_shops` |
+| `int_payments` | intermediate (view) | one payment (first try + its retries) | 100,141 | `payment_id` | `int_attempts`, grouped by `payment_id` |
+| `int_approved_payments` | intermediate (view) | one sale (approved try) | 88,565 | `attempt_id` | `int_attempts` (approved only) + `stg_fee_rules` + `stg_fraud_reports` |
+| `fct_money_map` | mart (table) | one shop x month | 288 | `shop_id` + `payment_month` | `int_payments` + `int_approved_payments` |
+
+`int_payments` holds what was won and lost (every purchase, whatever its outcome);
+`int_approved_payments` holds what was earned and paid on each sale. Both feed the money map.
+
+### What each model adds
+
+- **`int_attempts`**: each try with its shop's columns (`shop_country`, `business_type`,
+  `shop_fee_pct`, `shop_fixed_fee_eur`, `retries_on_date`, `three_ds_policy`,
+  `three_ds_threshold_eur`) and three worked-out columns: `attempt_date` (`DATE(attempted_at)`, UTC),
+  `is_approved`, and `card_region` (card country vs the shop's country: domestic / other_eu /
+  non_eu). Later models read `card_region` from here; nothing recalculates it.
+- **`int_payments`**: the columns that are the same on every try of a payment (shop, bank, amount,
+  card, business type, 3D Secure, the shop's retry and 3D Secure settings), plus
+  `number_of_tries`, `final_outcome` (the last try's outcome), `payment_date` (the last try's day),
+  `approved_attempt_id` (empty if never approved) and `is_saved_by_retry` (approved after more than
+  one try).
+- **`int_approved_payments`**: the matched fee rule (`bank_fee_pct`, `bank_fixed_fee_eur`,
+  `fee_rule_valid_from`), `fraud_report_id` (empty = not reported), and four money columns per sale,
+  each rounded to the cent:
+  - `shop_price_eur` = amount x shop % / 100 + shop fixed fee
+  - `expected_bank_fee_eur` = amount x bank % / 100 + bank fixed fee
+  - `guarantee_cost_eur` = amount + €20 when reported as fraud and 3D Secure was not used, else 0
+  - `platform_margin_eur` = shop price - expected bank fee - guarantee cost
+- **`fct_money_map`**: per shop and month, `payments_count`, `lost_to_declines_eur` and
+  `lost_to_give_ups_eur` (from `int_payments`), and `approved_payments_count`,
+  `approved_sales_eur`, `shop_price_eur`, `expected_bank_fee_eur`, `guarantee_cost_eur`,
+  `platform_margin_eur` (from `int_approved_payments`), all summed.
+
+### Rules the models follow
+
+- A payment counts on the day of its last try (the approval day for approved payments). No payment
+  spans two months.
+- Fee rule match: same `bank_id`, `card_type` and `card_region`, and the approval date between
+  `valid_from` and `valid_to` (`valid_to` is the last valid day; empty = still valid). Every sale
+  matches exactly one rule.
+- The guarantee cost counts in the sale's month, not the month of the report. Only reported fraud
+  is counted, so late 2025 is a lower bound (any correction belongs to Stage 4).
+- `expected_bank_fee_eur` is the fee the rules say the bank should take. `bank_fees_eur` (in
+  `stg_bank_payouts`) is what the bank actually took. Stage 5 compares the two.
+- The money map sums each input per shop-month first, then joins on `shop_id` + `payment_month`,
+  so one row meets one row.
+
+### How joins are kept from multiplying rows
+
+| Join | Why it cannot add rows | Proven by |
+| --- | --- | --- |
+| tries → shops | `shop_id` is unique in `stg_shops` | `equal_rowcount`: `int_attempts` = `stg_payment_attempts` |
+| sales → fee rules | the four conditions cover the full key of a fee rule | `unique` on `int_approved_payments.attempt_id` |
+| sales → fraud reports | at most one report per try | same test |
+| payments ↔ sales, per shop-month | both sides have one row per shop + month | `unique_combination_of_columns` (`shop_id`, `payment_month`) and the totals test |
+
+### Tests (22)
+
+Every test below was made to fail once on purpose, then fixed back.
+
+| Model | Tests | What they prove |
+| --- | --- | --- |
+| `int_attempts` | `attempt_id` unique + not_null; `equal_rowcount` vs `stg_payment_attempts`; `card_region` not_null + accepted_values; `payment_id` unique where `is_approved`; `payment_id` relationships → `int_payments` | no try doubled or lost by the shop join; every try has a fee group; at most one approved try per payment; no payment lost when tries are grouped |
+| `int_payments` | `payment_id` unique + not_null; `final_outcome` not_null + accepted_values; `approved_attempt_id` relationships → `int_approved_payments`; rule: `approved_attempt_id` filled exactly when `final_outcome` = approved | one row per payment; the approved try is always the last; no sale lost |
+| `int_approved_payments` | `attempt_id` unique + not_null; `expected_bank_fee_eur` not_null; rule: 0 < fee < amount; rule: guarantee cost > 0 exactly when reported and no 3D Secure | exactly one fee rule per sale; fee % divided by 100; the guarantee follows rulebook §8 |
+| `fct_money_map` | `unique_combination_of_columns` (`shop_id`, `payment_month`); `approved_sales_eur`, `platform_margin_eur` not_null; singular test `dbt/tests/assert_money_map_totals_match.sql` | one row per shop-month; the map's totals equal those of its inputs, so no money was doubled or lost |
