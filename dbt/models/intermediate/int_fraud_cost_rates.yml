@@ -1,0 +1,23 @@
+models:
+  - name: int_fraud_cost_rates
+    columns:
+      - name: business_type
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['online_retail', 'travel', 'digital_subscriptions', 'food_delivery']
+      - name: fraud_cost_per_100_eur_low
+        data_tests:
+          - not_null
+      - name: fraud_cost_per_100_eur_best
+        data_tests:
+          - not_null
+      - name: fraud_cost_per_100_eur_high
+        data_tests:
+          - not_null
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "fraud_cost_per_100_eur_low >= 0 AND fraud_cost_per_100_eur_low <= fraud_cost_per_100_eur_best AND fraud_cost_per_100_eur_best <= fraud_cost_per_100_eur_high"

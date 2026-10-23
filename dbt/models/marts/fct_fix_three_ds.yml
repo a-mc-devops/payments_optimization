@@ -1,0 +1,25 @@
+models:
+  - name: fct_fix_three_ds
+    columns:
+      - name: shop_id
+        data_tests:
+          - unique
+          - not_null
+      - name: three_ds_policy
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['always', 'never', 'above_threshold']
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('int_shop_margins')
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(three_ds_policy != 'always' OR check_every_shop_sales_eur = 0) AND (three_ds_policy != 'never' OR check_none_shop_sales_eur = 0)"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "check_every_shop_sales_eur <= 0 AND check_none_shop_sales_eur >= 0"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "check_every_platform_profit_eur_low <= check_every_platform_profit_eur_best AND check_every_platform_profit_eur_best <= check_every_platform_profit_eur_high AND check_none_platform_profit_eur_low <= check_none_platform_profit_eur_best AND check_none_platform_profit_eur_best <= check_none_platform_profit_eur_high"

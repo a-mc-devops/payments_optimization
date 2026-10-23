@@ -166,3 +166,76 @@ Every test below was made to fail once on purpose, then fixed back.
 | `int_payments` | `payment_id` unique + not_null; `final_outcome` not_null + accepted_values; `approved_attempt_id` relationships → `int_approved_payments`; rule: `approved_attempt_id` filled exactly when `final_outcome` = approved | one row per payment; the approved try is always the last; no sale lost |
 | `int_approved_payments` | `attempt_id` unique + not_null; `expected_bank_fee_eur` not_null; rule: 0 < fee < amount; rule: guarantee cost > 0 exactly when reported and no 3D Secure | exactly one fee rule per sale; fee % divided by 100; the guarantee follows rulebook §8 |
 | `fct_money_map` | `unique_combination_of_columns` (`shop_id`, `payment_month`); `approved_sales_eur`, `platform_margin_eur` not_null; singular test `dbt/tests/assert_money_map_totals_match.sql` | one row per shop-month; the map's totals equal those of its inputs, so no money was doubled or lost |
+
+## Fix models (Stage 4)
+
+Built in dbt from the core models: two intermediate views shared by several fixes, one mart table per
+fix, and a ranking table. How each fix is valued, with the results: `docs/fix_methods.md`. Diagram:
+`images/fix_models.png`.
+
+![Fix models](../images/fix_models.png)
+
+| Model | Layer | One row = | Rows | Key | Built from |
+| --- | --- | --- | ---: | --- | --- |
+| `int_fraud_cost_rates` | intermediate (view) | one business type | 4 | `business_type` | `int_approved_payments` (Jan-Jul 2025, without 3D Secure) |
+| `int_shop_margins` | intermediate (view) | one shop | 24 | `shop_id` | `int_approved_payments` + `int_fraud_cost_rates` |
+| `fct_fix_repricing` | mart (table) | one shop | 24 | `shop_id` | `int_shop_margins` + `int_fraud_cost_rates` + `int_approved_payments` |
+| `fct_fix_three_ds` | mart (table) | one shop (one column group per option) | 24 | `shop_id` | `int_shop_margins` + `int_fraud_cost_rates` + `int_payments` |
+| `fct_fix_retries` | mart (table) | one shop | 24 | `shop_id` | `int_attempts` + `int_payments` + `int_shop_margins` |
+| `fct_fix_bank_choice` | mart (table) | one shop | 24 | `shop_id` | `int_payments` + `int_approved_payments` + `stg_banks` + `stg_fee_rules` + `int_shop_margins` |
+| `fct_fix_ranking` | mart (table) | one fix option | 5 | `fix_option` | the four fix tables |
+
+### What each model adds
+
+- **`int_fraud_cost_rates`**: per business type, the January–July sales without 3D Secure, their fraud
+  cases and guarantee cost, and the fraud cost per €100 of those sales as low, best and high values
+  (cases ± 2√cases).
+- **`int_shop_margins`**: per shop, its 2025 payments count, sales, sales without 3D Secure, price
+  income and bank fees; expected fraud cost (sales without 3D Secure × the type's rate); and the expected
+  margin (price − bank fees − expected fraud) in € and per €100 of sales, each as low, best and high.
+- **`fct_fix_repricing`**: the safe % (breaks even at the high fraud value, fixed fee kept), whether
+  the shop moves (`moves_to_safe_price`: it loses money at the best estimate), the extra price income,
+  the margin after repricing, and two flags: `has_high_own_fraud` and `is_loss_only_at_high_fraud`.
+- **`fct_fix_three_ds`**: the shop's current setting, its sales with and without the check, its sales
+  lost to give-ups, the type's give-up rate, and platform profit (low, best, high) and shop sales for
+  "check every payment" and "check no payment".
+- **`fct_fix_retries`**: the shop's € of payments whose first try was declined "try again", the type's
+  rescue rates with retries on and off, the shop sales gained and the platform profit.
+- **`fct_fix_bank_choice`**: the shop's € of Dutch, German and French card payments on a bank from
+  another country, the type's approval rates on the own-country bank and on another bank, the shop
+  sales gained, the fee change on the moved sales, and the platform profit.
+- **`fct_fix_ranking`**: per fix option, platform profit (low, best, high), shop sales, "depends on"
+  and the rank by the low € value of platform profit.
+
+### Rules the models follow
+
+- Fraud rates come from January–July 2025 payments only (dbt var `fraud_complete_before`); their
+  reports have all arrived. The chance range uses dbt var `standard_errors_in_range` (2).
+- Every rate is measured per business type: fraud cost, give-up rate, rescue rate, approval rate.
+- The low € value of a fix uses the pessimistic end of the fraud range. Low, best and high appear only
+  where fraud drives the result (repricing, 3D Secure); retries and bank choice give the best estimate.
+- Money columns that must compare exactly are rounded to the cent.
+- Fixes are never added together.
+
+### How joins are kept from multiplying rows
+
+| Join | Why it cannot add rows | Proven by |
+| --- | --- | --- |
+| shop totals → fraud rates, give-up rates, rescue rates, approval rates | each joined table has one row per `business_type` | `equal_rowcount` against `int_shop_margins` or `stg_shops` |
+| shop margins → per-shop CTEs (own fraud, give-ups, "try again" €, moved €, fee change) | each CTE is grouped by `shop_id` | same test, plus `unique` on `shop_id` |
+| a payment's first try → its payment | one first try per payment; `payment_id` is the key of `int_payments` | `fct_fix_retries` row count and rescue-rate test |
+| moved sale → the own-country bank's fee rule | the four conditions cover the full key of a fee rule | checked: all 30,237 moved sales match exactly one rule |
+
+### Tests (36)
+
+Every test below was made to fail once on purpose, then fixed back.
+
+| Model | Tests | What they prove |
+| --- | --- | --- |
+| `int_fraud_cost_rates` | `business_type` unique + not_null + accepted_values; the three rate columns not_null; rule: 0 ≤ low ≤ best ≤ high | one rate per business type; no empty rate; the range never goes below zero |
+| `int_shop_margins` | `shop_id` unique + not_null; `equal_rowcount` vs `stg_shops`; rule: low ≤ best ≤ high margin | no shop dropped by the join to the fraud rates; the low/high flip is the right way round |
+| `fct_fix_repricing` | `shop_id` unique + not_null; `has_high_own_fraud` not_null; `equal_rowcount` vs `int_shop_margins`; rule: moved shops break even at the high fraud value (within €0.01); rule: extra income > 0 exactly for moved shops | the safe % uses the high fraud value; only loss-making shops move; the flag is never empty for shops without unchecked sales |
+| `fct_fix_three_ds` | `shop_id` unique + not_null; `three_ds_policy` accepted_values; `equal_rowcount`; rule: an option that changes nothing is 0; rule: checking every payment never adds sales, checking none never removes any; rule: low ≤ best ≤ high for both options | checked and unchecked sales are not mixed up; no sign errors; the flip is right for both options |
+| `fct_fix_retries` | `shop_id` unique + not_null; `equal_rowcount`; rule: rescue rate on > off and gains ≥ 0 | the retries on/off flag is the right way round |
+| `fct_fix_bank_choice` | `shop_id` unique + not_null; `equal_rowcount`; rule: own-country approval rate > other rate and gains ≥ 0 | the own-country flag is the right way round; the plan's core assumption holds |
+| `fct_fix_ranking` | `fix_option` unique + not_null; `fix_rank` not_null; rule: low ≤ best ≤ high | one row per option; the ranges are summed the right way round |

@@ -1,0 +1,14 @@
+models:
+  - name: fct_fix_ranking
+    columns:
+      - name: fix_option
+        data_tests:
+          - unique
+          - not_null
+      - name: fix_rank
+        data_tests:
+          - not_null
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "platform_profit_eur_low <= platform_profit_eur_best AND platform_profit_eur_best <= platform_profit_eur_high"

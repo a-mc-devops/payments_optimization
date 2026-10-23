@@ -1,0 +1,20 @@
+models:
+  - name: fct_fix_repricing
+    columns:
+      - name: shop_id
+        data_tests:
+          - unique
+          - not_null
+      - name: has_high_own_fraud
+        data_tests:
+          - not_null
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('int_shop_margins')
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "NOT moves_to_safe_price OR ABS(expected_margin_after_eur_low) < 0.01"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(moves_to_safe_price AND extra_price_income_eur > 0) OR (NOT moves_to_safe_price AND extra_price_income_eur = 0)"

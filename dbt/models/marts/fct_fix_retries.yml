@@ -1,0 +1,14 @@
+models:
+  - name: fct_fix_retries
+    columns:
+      - name: shop_id
+        data_tests:
+          - unique
+          - not_null
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('int_shop_margins')
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "rescue_rate_on > rescue_rate_off AND shop_sales_gain_eur >= 0"

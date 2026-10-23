@@ -1,0 +1,14 @@
+models:
+  - name: int_shop_margins
+    columns:
+      - name: shop_id
+        data_tests:
+          - unique
+          - not_null
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_shops')
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "expected_margin_eur_low <= expected_margin_eur_best AND expected_margin_eur_best <= expected_margin_eur_high"

@@ -33,3 +33,7 @@ models:
     marts:            # final tables Power BI reads (Stage 3-4)
       +schema: marts
       +materialized: table
+# Assumptions used by the Stage 4 models
+vars:
+  fraud_complete_before: '2025-08-01'
+  standard_errors_in_range: 2

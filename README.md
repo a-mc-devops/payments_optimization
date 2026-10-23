@@ -73,11 +73,45 @@ Tests prove that no join doubled or dropped a row: every sale matches exactly on
 the approved try is always a payment's last, and the money map's totals equal those of its inputs
 to the cent.
 
+## Fix models
+
+Each fix gets a euro value per year, measured on 2025, in two ways: platform profit and shop sales.
+Where the value rests on fraud data (few cases), it has a low/high range, and the ranking orders the
+fixes by the low value: the money the platform is fairly sure of. How each fix is valued, the
+alternatives considered and the full results: [`docs/fix_methods.md`](docs/fix_methods.md).
+
+| Model | One row = | What it holds |
+| --- | --- | --- |
+| `int_fraud_cost_rates` | business type | fraud cost per €100 of sales without 3D Secure, measured on January–July 2025 (all fraud reports in), low/best/high |
+| `int_shop_margins` | shop | price income, bank fees, expected fraud cost and margin |
+| `fct_fix_repricing` | shop | safe price for loss-making shops, extra price income, fraud flags |
+| `fct_fix_three_ds` | shop | checking every payment or none: fraud saved against customers lost at the check |
+| `fct_fix_retries` | shop | sales rescued by automatic retries, beyond customers' own retries |
+| `fct_fix_bank_choice` | shop | approval gain and fee change from sending cards to their own country's bank |
+| `fct_fix_ranking` | fix option | the five options, ranked |
+
+![Fix models](images/fix_models.png)
+
+Results (2025, per year):
+
+| Rank | Fix | Platform profit (low / best / high) | Shop sales | Depends on |
+| ---: | --- | --- | ---: | --- |
+| 1 | Reprice the 4 loss-making shops | €6,068 / €6,068 / €6,068 | €0 | the shops accept the new price |
+| 2 | Send Dutch, German and French cards to their own country's bank | €5,948 | +€144,378 | the new bank accepts the shop |
+| 3 | 3D Secure on every payment | €4,984 / €11,494 / €18,002 | −€214,555 | nothing outside the platform |
+| 4 | Automatic retries at the 6 shops without them | €248 | +€44,639 | nothing outside the platform |
+| 5 | 3D Secure on no payment | −€51,439 / −€31,118 / −€10,797 | +€478,588 | nothing outside the platform |
+
+- The platform keeps about €0.37 of every €100 of sales, so fixes that save sales are worth far more
+  to the shops than to the platform.
+- The two most certain platform gains both depend on someone outside the platform.
+- Checking every payment gains the platform €1 for about every €19 of sales the shops lose.
+
 ## Repository
 
-- `docs/`: rulebook, answer-file fingerprint, data model, profiling notes
-- `images/`: diagrams (table relationships, core models)
-- `dbt/`: dbt project: staging models (`models/staging/`), core models (`models/intermediate/`,
+- `docs/`: rulebook, answer-file fingerprint, data model, profiling notes, fix methods (Stage 4)
+- `images/`: diagrams (table relationships, core models, fix models)
+- `dbt/`: dbt project: staging models (`models/staging/`), core and fix models (`models/intermediate/`,
   `models/marts/`), each with a YAML file of tests; custom SQL tests (`tests/`); a profiling macro
   that profiles any table (`macros/profile_table.sql`); profiling queries (`analyses/`)
 - `python/`: data generator and checks
@@ -90,14 +124,16 @@ Python (data generator) → BigQuery → dbt → Power BI
 
 ## Status
 
-Stage 3 of 7 complete:
+Stage 4 of 7 complete:
 
 1. Data generated, checked and loaded into BigQuery.
 2. Raw data profiled; one staging model per raw table in dbt (renames, and 317 duplicate payment
    attempts removed), each with tests: keys, empty values, allowed values, links between tables,
    and rules between columns.
 3. Core models: tries, payments, sales with their fees and fraud cost, and a money map per shop and
-   month, with 22 tests. `dbt build` runs 10 models and 91 tests.
+   month, with 22 tests.
+4. Fix calculations: seven models, with 36 tests, put a yearly euro value on each fix and rank them.
+   `dbt build` runs 17 models and 127 tests.
 
-Next: Stage 4, a yearly euro value for each fix (bank choice, retries, shop repricing, 3D Secure
-settings), with low/high ranges, ranked.
+Next: Stage 5, checks: an exception list of bank payouts that don't match the payments, and a comparison
+of the results with the hidden answer file.
