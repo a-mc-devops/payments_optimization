@@ -1,0 +1,28 @@
+models:
+  - name: fct_payout_checks
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - shop_id
+              - bank_id
+              - payment_date
+    columns:
+      - name: shop_id
+        data_tests:
+          - not_null
+      - name: bank_id
+        data_tests:
+          - not_null
+      - name: payment_date
+        data_tests:
+          - not_null
+      - name: payout_id
+        data_tests:
+          - unique
+      - name: check_result
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['matched', 'missing_payout', 'payout_without_payments', 'count_or_amount_mismatch', 'wrong_fee']
