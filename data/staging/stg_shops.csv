@@ -1,0 +1,25 @@
+shop_id,shop_name,shop_country,business_type,shop_fee_pct,shop_fixed_fee_eur,retries_on_date,three_ds_policy,three_ds_threshold_eur
+S01,Online Retail NL 1,NL,online_retail,1.1,0.1,2025-03-17,above_threshold,150
+S04,Online Retail NL 2,NL,online_retail,1.6,0.25,,above_threshold,150
+S08,Travel NL 1,NL,travel,2.4,0.25,,above_threshold,250
+S11,Travel NL 2,NL,travel,2.4,0.25,2025-03-17,above_threshold,250
+S14,Digital Subscriptions DE 1,DE,digital_subscriptions,2.4,0.25,2025-06-09,above_threshold,15
+S18,Digital Subscriptions FR 2,FR,digital_subscriptions,2.4,0.25,,above_threshold,15
+S21,Food Delivery NL 1,NL,food_delivery,1.4,0.25,2025-06-09,above_threshold,40
+S23,Food Delivery NL 2,NL,food_delivery,1.4,0.25,2025-09-15,above_threshold,40
+S02,Online Retail DE 1,DE,online_retail,1.6,0.25,2025-09-15,always,
+S05,Online Retail DE 2,DE,online_retail,1.6,0.25,2025-03-17,always,
+S07,Travel FR 1,FR,travel,1.8,0.1,2025-06-09,always,
+S10,Travel FR 2,FR,travel,2.4,0.25,2025-09-15,always,
+S15,Digital Subscriptions FR 1,FR,digital_subscriptions,2.4,0.25,2025-09-15,always,
+S17,Digital Subscriptions DE 2,DE,digital_subscriptions,2.4,0.25,2025-06-09,always,
+S20,Food Delivery FR 1,FR,food_delivery,1.4,0.25,2025-09-15,always,
+S24,Food Delivery FR 2,FR,food_delivery,1.4,0.25,2025-06-09,always,
+S03,Online Retail FR 1,FR,online_retail,1.6,0.25,2025-06-09,never,
+S06,Online Retail FR 2,FR,online_retail,1.6,0.25,2025-09-15,never,
+S09,Travel DE 1,DE,travel,2.4,0.25,2025-03-17,never,
+S12,Travel DE 2,DE,travel,1.5,0,,never,
+S13,Digital Subscriptions NL 1,NL,digital_subscriptions,2.4,0.25,,never,
+S16,Digital Subscriptions NL 2,NL,digital_subscriptions,1.5,0,2025-03-17,never,
+S19,Food Delivery DE 1,DE,food_delivery,0.9,0.1,,never,
+S22,Food Delivery DE 2,DE,food_delivery,1.4,0.25,2025-03-17,never,

@@ -1,0 +1,6 @@
+fix_rank,fix_option,platform_profit_eur_low,platform_profit_eur_best,platform_profit_eur_high,shop_sales_eur,depends_on
+3,3D Secure on every payment,4984.3,11493.87,18001.76,-214554.69,Nothing outside the platform
+5,3D Secure on no payment,-51438.73,-31118.45,-10797.08,478588.33,Nothing outside the platform
+4,Retries on at the 6 never-on shops,247.74,247.74,247.74,44638.61,Nothing outside the platform
+2,"Route Dutch, German and French cards to their own-country bank",5948.02,5948.02,5948.02,144377.72,The new bank accepts the shop
+1,Reprice loss-making shops,6068.39,6068.39,6068.39,0,Shops accept the new price

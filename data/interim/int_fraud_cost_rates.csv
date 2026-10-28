@@ -1,0 +1,5 @@
+business_type,sales_without_3ds_eur,fraud_case_count,guarantee_cost_eur,fraud_cost_per_100_eur_low,fraud_cost_per_100_eur_best,fraud_cost_per_100_eur_high
+online_retail,617877.22,16,1105.73,0.0895,0.179,0.2684
+travel,1001356.91,10,4043.81,0.1484,0.4038,0.6592
+digital_subscriptions,105344.71,62,2004.38,1.4194,1.9027,2.386
+food_delivery,292395.24,6,376.5,0.0236,0.1288,0.2339
