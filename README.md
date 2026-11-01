@@ -1,139 +1,89 @@
-# Payments Optimization
+# Payments Optimization: Where the Margin Leaks and Which Fixes Pay Back
 
-Where does a payments platform lose money, and which fixes recover the most?
+An end-to-end analytics project on simulated data from a fictional EU online card payment platform, modelled on providers such as Stripe and PayPal. The platform processes card payments for 24 shops, and the project answers one question: where does it lose money, and which fixes recover the most?
 
-A fictional EU payments platform processes card payments for 24 shops. Money leaks in four
-places:
+For additional analytical depth, the project adds a hypothetical marketing strategy: fraud costs, which payment platforms commonly deduct from their shops, are paid by the platform itself to grow its customer base of shops. When a stolen card is used on a payment without the 3D Secure check, the platform, not the shop, refunds the card owner and pays the €20 dispute fee. It's a strong offer for shops, but it puts the fraud risk on the platform's own margin.
 
-- **Declined cards**: the customer wanted to pay, the sale was lost.
-- **Bank fees**: some payments are routed to a more expensive bank than necessary.
-- **Fraud**: the platform includes fraud protection in its price, so it pays for stolen-card
-  payments made without the 3D Secure check (the amount back to the card owner plus a €20 dispute
-  fee).
-- **Underpriced shops**: shops paying the platform less than their payments cost it.
+In 2025 the platform kept only €42,594 of €11.5 million in sales, about €0.37 per €100. The project finds where the rest leaks (declined cards, bank fees, fraud and underpriced shops), puts a yearly € value on one fix for each, and ranks the fixes for a Head of Payments. A key part is what the fraud promise costs, and how 3D Secure settings trade fraud losses against customers who give up at the check. Every bank payout is also checked against the sales behind it: €17,357 is owed back by the banks.
 
-The project measures each leak per shop and month, estimates what each fix is worth per
-year (bank choice, retrying declined payments, repricing shops, the 3D Secure security
-check), and ranks the actions for a Head of Payments.
+Built with a Python data generator, a tested dbt pipeline on BigQuery, a Tableau dashboard and a recommendations report.
 
-The scenario: fraud protection is the platform's selling point. Instead of passing fraud costs to
-its shops, or forcing the 3D Secure check on every payment (which makes some customers give up),
-the platform carries the cost of fraud on payments without the check. The project measures what
-that guarantee costs, which business types make it expensive, and how different 3D Secure settings
-would shift money between fraud losses and lost sales.
+[![Dashboard](images/dashboard.svg)](https://public.tableau.com/app/profile/cihan.ak.n/viz/PaymentsOptimization-MarginLeaksandFixes/Overview)
 
-## About the data
+*Click the image to open the interactive dashboard on Tableau Public.*
 
-The data is simulated. Real payment data is never published, and public practice datasets
-had gaps that would have become the project. A Python generator creates a year of payments
-(2025) from written-down rules in [`docs/rulebook.md`](docs/rulebook.md), plus a hidden
-answer file that the analysis never reads. Its SHA-256 fingerprint was committed before any
-analysis started ([`docs/answers_sha256.txt`](docs/answers_sha256.txt)). At the end, the
-results are checked against those answers.
+## Results (2025, per year)
 
-| Table | One row = | Rows |
-| --- | --- | ---: |
-| shops | shop | 24 |
-| banks | bank | 3 |
-| fee_rules | bank x card type x region x period | 21 |
-| payment_attempts | one try to pay (retries are separate rows) | 106,130 |
-| bank_payouts | shop x bank x payment day | 11,281 |
-| fraud_reports | payment later reported as fraud | 162 |
-
-How the tables connect (keys, joins, and a diagram): [`docs/data_model.md`](docs/data_model.md).
-
-![How the six tables connect](images/erd.svg)
-
-The data includes realistic mess on purpose: duplicate rows, fraud reports that arrive
-late, one bank's payouts with wrong fees, and a few missing payouts. What profiling found,
-and the cleaning plan: [`docs/profiling_notes.md`](docs/profiling_notes.md).
-
-Rebuild the data (the fixed seed gives identical files):
-
-```
-pip install -r python/requirements.txt
-python python/generate_data.py
-python python/check_generated_data.py
-```
-
-## Core models
-
-Built in dbt on top of the staging models (details: [`docs/data_model.md`](docs/data_model.md#core-models-stage-3)):
-
-| Model | One row = | Rows | What it holds |
-| --- | --- | ---: | --- |
-| `int_attempts` | one try | 105,813 | each try with its shop's details, its day, approved yes/no, and its bank-fee group |
-| `int_payments` | one payment (first try + retries) | 100,141 | what was won and lost: final outcome, number of tries, saved by a retry |
-| `int_approved_payments` | one sale | 88,565 | what was earned and paid: shop price, expected bank fee, fraud guarantee cost, margin |
-| `fct_money_map` | one shop x month | 288 | the money map: sales, price, bank fees, fraud cost, margin, and sales lost to declines and give-ups |
-
-![Core models](images/core_models.png)
-
-Tests prove that no join doubled or dropped a row: every sale matches exactly one bank fee rule,
-the approved try is always a payment's last, and the money map's totals equal those of its inputs
-to the cent.
-
-## Fix models
-
-Each fix gets a euro value per year, measured on 2025, in two ways: platform profit and shop sales.
-Where the value rests on fraud data (few cases), it has a low/high range, and the ranking orders the
-fixes by the low value: the money the platform is fairly sure of. How each fix is valued, the
-alternatives considered and the full results: [`docs/fix_methods.md`](docs/fix_methods.md).
-
-| Model | One row = | What it holds |
-| --- | --- | --- |
-| `int_fraud_cost_rates` | business type | fraud cost per €100 of sales without 3D Secure, measured on January–July 2025 (all fraud reports in), low/best/high |
-| `int_shop_margins` | shop | price income, bank fees, expected fraud cost and margin |
-| `fct_fix_repricing` | shop | safe price for loss-making shops, extra price income, fraud flags |
-| `fct_fix_three_ds` | shop | checking every payment or none: fraud saved against customers lost at the check |
-| `fct_fix_retries` | shop | sales rescued by automatic retries, beyond customers' own retries |
-| `fct_fix_bank_choice` | shop | approval gain and fee change from sending cards to their own country's bank |
-| `fct_fix_ranking` | fix option | the five options, ranked |
-
-![Fix models](images/fix_models.png)
-
-Results (2025, per year):
+Each fix is valued on its own, both for the platform and for the shops, and the fixes are ranked by the low estimate of platform profit. The values are never added together, because some lost sales could be won back by more than one fix.
 
 | Rank | Fix | Platform profit (low / best / high) | Shop sales | Depends on |
 | ---: | --- | --- | ---: | --- |
 | 1 | Reprice the 4 loss-making shops | €6,068 / €6,068 / €6,068 | €0 | the shops accept the new price |
-| 2 | Send Dutch, German and French cards to their own country's bank | €5,948 | +€144,378 | the new bank accepts the shop |
+| 2 | Send Dutch, German and French cards to their own country's bank (16 shops) | €5,948 | +€144,378 | the new bank accepts the shop |
 | 3 | 3D Secure on every payment | €4,984 / €11,494 / €18,002 | −€214,555 | nothing outside the platform |
 | 4 | Automatic retries at the 6 shops without them | €248 | +€44,639 | nothing outside the platform |
 | 5 | 3D Secure on no payment | −€51,439 / −€31,118 / −€10,797 | +€478,588 | nothing outside the platform |
 
-- The platform keeps about €0.37 of every €100 of sales, so fixes that save sales are worth far more
-  to the shops than to the platform.
-- The two most certain platform gains both depend on someone outside the platform.
-- Checking every payment gains the platform €1 for about every €19 of sales the shops lose.
+Separately, 4 bank payouts never arrived and 96 payouts carry a wrong fee: €17,357 to claim back from the banks.
 
-## Repository
+## What I built
 
-- `docs/`: rulebook, answer-file fingerprint, data model, profiling notes, fix methods (Stage 4)
-- `images/`: diagrams (table relationships, core models, fix models)
-- `dbt/`: dbt project: staging models (`models/staging/`), core and fix models (`models/intermediate/`,
-  `models/marts/`), each with a YAML file of tests; custom SQL tests (`tests/`); a profiling macro
-  that profiles any table (`macros/profile_table.sql`); profiling queries (`analyses/`)
-- `python/`: data generator and checks
-- `bigquery/`: table schemas, load guide and load check
-- `data/`: generated files (not in git)
+- **A layered dbt project on BigQuery:** 18 models from raw data to results (6 staging views, 5 intermediate views, 7 mart tables).
+- **135 automated tests:** keys, relationships, allowed values, rules between columns and custom SQL checks, each broken once on purpose to prove it can fail.
+- **Fix valuation:** a yearly € value for each fix, with low, best and high estimates where fraud makes the numbers uncertain.
+- **Payout reconciliation:** every bank payout matched with the sales behind it, with an exception list of missing payouts and wrong fees.
+- **Validation against sealed answers:** the simulated data came with a hidden answer file, fingerprinted before any analysis and opened once at the end.
+- **A Tableau Public dashboard** and a [recommendations report](docs/recommendations.md) for the Head of Payments.
 
-## Stack
+## Data quality
 
-Python (data generator) → BigQuery → dbt → Power BI
+- **Raw data profiling:** every raw table was profiled before its staging model, by hand and with a reusable macro. It found 317 duplicate payment attempts, empty values that carry a meaning, and late fraud reports. The duplicates are removed in staging, the empty values are kept and tested, and fraud rates are measured on January–July payments, whose reports have all arrived.
+- **dbt tests:** all 135 pass, and a failing test stops the build.
+- **Payout check:** 4 missing payouts and 96 wrong fees found, all listed in an exception table.
+- **Answer check:** every type of planted problem was found, and the year's fraud cost and margin came within 3% and 1% of the truth. The weak point is fraud per shop: 6 of 16 shop margins fall outside their estimated range.
 
-## Status
+## Read more
 
-Stage 4 of 7 complete:
+| Read | What it is |
+| --- | --- |
+| [Recommendations](docs/recommendations.md) | What to do, in what order, and what each action is worth |
+| [Methods and checks](docs/methods_and_checks.md) | How every number is made and how it was checked, with a diagram for each step |
+| [Data generation rulebook](docs/data_generation_rulebook.md) | The rules the simulated data follows |
+| [Dashboard](https://public.tableau.com/app/profile/cihan.ak.n/viz/PaymentsOptimization-MarginLeaksandFixes/Overview) | The interactive Tableau Public page |
 
-1. Data generated, checked and loaded into BigQuery.
-2. Raw data profiled; one staging model per raw table in dbt (renames, and 317 duplicate payment
-   attempts removed), each with tests: keys, empty values, allowed values, links between tables,
-   and rules between columns.
-3. Core models: tries, payments, sales with their fees and fraud cost, and a money map per shop and
-   month, with 22 tests.
-4. Fix calculations: seven models, with 36 tests, put a yearly euro value on each fix and rank them.
-   `dbt build` runs 17 models and 127 tests.
+## How it is built
 
-Next: Stage 5, checks: an exception list of bank payouts that don't match the payments, and a comparison
-of the results with the hidden answer file.
+Python (data generator) → BigQuery → dbt → Tableau Public
+
+![Model lineage](images/model_lineage.svg)
+
+The data is simulated, because real payment data is never published. A Python generator creates a year of payments (2025) from the [rulebook](docs/data_generation_rulebook.md): six raw tables with about 100,000 payments, plus planted problems (duplicate rows, late fraud reports, wrong bank fees and missing payouts). The hidden answer file's SHA-256 fingerprint was committed before any analysis ([`docs/answers_sha256.txt`](docs/answers_sha256.txt)); now that the analysis is finished, the file is in `data/answers/`, and `shasum -a 256 data/answers/answers.json` gives the committed fingerprint.
+
+<details>
+<summary><b>Rebuild</b></summary>
+
+1. The six raw CSVs are already in `data/raw/`. To reproduce them (the fixed seed gives identical files):
+
+   ```
+   pip install -r python/requirements.txt
+   python python/generate_data.py
+   python python/check_generated_data.py
+   ```
+
+2. Load the six CSVs from `data/raw/` into a BigQuery dataset `raw` (location EU). Use the schemas in `bigquery/schemas/` with auto-detect off, so money columns load as exact `NUMERIC`. Then run `bigquery/check_load.sql`: every row should say PASS.
+3. Run `dbt build` in `dbt/`.
+
+</details>
+
+<details>
+<summary><b>Repository</b></summary>
+
+- `docs/`: recommendations for the Head of Payments, methods and checks, data generation rulebook, answer-file fingerprint
+- `python/`: data generator and its checks
+- `bigquery/`: table schemas and the load check
+- `dbt/`: models (`models/`), custom tests (`tests/`), macros (`macros/`) and the profiling queries (`analyses/`)
+- `data/`: the six generated raw tables (`raw/`), the hidden answer file (`answers/`) and CSV exports of the dbt tables (`staging/`, `interim/`, `mart/`)
+- `bi/`: the Tableau workbook and a PDF of the dashboard
+- `images/`: the diagrams and the dashboard image
+
+</details>

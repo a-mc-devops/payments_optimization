@@ -1,14 +1,8 @@
-.DS_Store
 AGENTS.md
-research/
+.DS_Store
+*.xlsx
 
-# Hidden answer file: only its SHA-256 fingerprint is committed until the analysis is done
-data/answers/
-# Generated CSVs: rebuilt identically by python/generate_data.py
-data/raw/*.csv
-data/xlsx/*.xlsx
-
-# dbt output (made again on every run)
+# dbt Studio output (rebuilt on every run)
 target/
 dbt_packages/
 logs/

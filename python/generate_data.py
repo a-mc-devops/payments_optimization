@@ -1,12 +1,12 @@
 """Payments Optimization: data generator.
 
-Follows docs/rulebook.md (v4) exactly. Run from the repo root:
+Follows docs/data_generation_rulebook.md (v4) exactly. Run from the repo root:
 
     python python/generate_data.py
 
 Writes:
   data/raw/*.csv              six source tables (what the pipeline reads)
-  data/answers/answers.json   hidden answer file (dbt and Power BI must never read it)
+  data/answers/answers.json   hidden answer file (dbt and the dashboard must never read it)
 
 The seed is fixed, so the same code, the same package versions (python/requirements.txt)
 and the same machine give identical files.
